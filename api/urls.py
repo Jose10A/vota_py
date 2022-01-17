@@ -2,7 +2,8 @@ from django.urls import path
 from api import views
 urlpatterns = [
 
-    path("",views.hello_world.as_view(),name="hellow"),
+    path("disponibilidad",views.votacion_activa,name="hellow"),
+    path("",views.voto,name="emision"),
 
     #--front
     #invitacion

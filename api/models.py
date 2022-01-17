@@ -9,12 +9,10 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseU
 
 
 class votaciones(models.Model):
-
-
     titulo = models.TextField()
     cierre = models.DateTimeField()
-    inicio = models.DateTimeField(auto_now=True)
-    publicacion = models.BooleanField()
+    inicio = models.DateTimeField()
+    publicacion = models.DateTimeField()
     
 class configuracion(models.Model):
     convocatoria = models.TextField()
@@ -59,6 +57,7 @@ class empleados(AbstractBaseUser, PermissionsMixin):
 class votos_empleados(models.Model):
     id_votante = models.ForeignKey(empleados,on_delete=CASCADE)
     id_votacion = models.ForeignKey(votaciones,on_delete=CASCADE)
+    emision = models.DateTimeField(auto_now=True)
 
 class puestos(models.Model):
     titulo = models.TextField()
@@ -66,11 +65,11 @@ class puestos(models.Model):
 class candidatos(models.Model):
     id_empleado = models.ForeignKey(empleados,on_delete=models.CASCADE)
     id_puesto = models.ForeignKey(puestos,on_delete=CASCADE)
+    id_votaciones = models.ForeignKey(votaciones, related_name='candidatura',default=1,on_delete=models.CASCADE)
     media = models.TextField()
     
 class votos(models.Model):
     id_candidato = models.ForeignKey(candidatos,on_delete=models.CASCADE)
-    id_votaciones = models.ForeignKey(votaciones,on_delete=models.CASCADE)
     
 class votos_historicos(models.Model):
     id_candidato = models.ForeignKey(candidatos,on_delete=models.CASCADE)
