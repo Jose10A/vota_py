@@ -11,7 +11,7 @@ from rest_framework.decorators import api_view
 @api_view(['GET'])
 def votacion_activa(request):
     now = timezone.now()
-    votacion = votaciones.objects.filter(publicacion__lt=now).count()
+    votacion = votaciones.objects.filter(publicacion__lt=now,cierre__gt=now).count()
     if votacion > 0:
         return Response({"message": True})
     else:
