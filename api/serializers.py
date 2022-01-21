@@ -3,7 +3,7 @@ from django.db.models import fields
 from rest_framework import serializers
 from djoser.serializers import UserCreateSerializer
 from django.contrib.auth import get_user_model
-from api.models import empleados, votaciones, puestos, candidatos
+from api.models import empleados, votaciones, puestos, candidatos, votos, votos_empleados
 
 class EmpleadoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -13,7 +13,13 @@ class EmpleadoSerializer(serializers.ModelSerializer):
 class VotacionSerializer(serializers.ModelSerializer):
     class Meta:
         model = votaciones
-        fields = [ 'titulo', 'inicio','cierre', 'publicacion']
+        fields = [ 'id','titulo', 'inicio','cierre', 'publicacion']
+
+class VotoEmpleadoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = votos_empleados
+        fields = "__all__"
+
         
 class puestoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -31,9 +37,7 @@ class UserShowSerializer(UserCreateSerializer):
     class Meta(UserCreateSerializer.Meta):
         model = User
         fields = [ 'nombres','apellidos']
-
-
-        
+      
 class CandidatoSerializer(serializers.ModelSerializer):
     id_puesto = puestoSerializer()
     id_empleado = UserShowSerializer()
@@ -42,6 +46,19 @@ class CandidatoSerializer(serializers.ModelSerializer):
         fields = "__all__"
         ordering = ['id_puesto']
 
+class ApiVotoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = votos
+        fields = "__all__"
+
+class votoSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    id_puesto = serializers.IntegerField()
+
+class VotoEmpleadoSerializer(serializers.Serializer):
+    voto = votoSerializer(many=True)
+    id_votacion = serializers.IntegerField()
+    
         
 
     

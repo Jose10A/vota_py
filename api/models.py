@@ -30,7 +30,6 @@ class UserAccountManager(BaseUserManager):
 
         return user
 
-
 class empleados(AbstractBaseUser, PermissionsMixin):
     nombres = models.TextField()
     apellidos = models.TextField()
@@ -38,8 +37,7 @@ class empleados(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=255, unique=True,default="example@gmail.com")
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-    is_anonymous = models.BooleanField(default=False)
-    is_authenticated = models.BooleanField(default=False)
+
     objects = UserAccountManager()
 
     USERNAME_FIELD = 'email'

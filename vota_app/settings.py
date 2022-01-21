@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
+from datetime import timedelta
 import os
 from pathlib import Path
 
@@ -43,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "corsheaders",
     'rest_framework',
+    'rest_framework.authtoken',
     'djoser',
     'api'
 ]
@@ -141,15 +143,12 @@ REST_FRAMEWORK = {
 DJOSER = {
     'LOGIN_FIELD':'email',
     'USER_CREATE_PASSWORD_RETYPE':True,
-    'USERNAME_CHANGED_EMAIL_CONFIRMATION':True,
-    'PASSWORD_CHANGED_EMAIL_CONFIRMATION':True,
     'SEND_CONFIRMATION_EMAIL':True,
-    'SENCD_ACTIVATION_EMAIL':True,  
+    'SEND_ACTIVATION_EMAIL':True,  
     'PASSWORD_RESET_CONFIRM_URL': '/password/reset/confirm/{uid}/{token}',
-    'USERNAME_RESET_CONFIRM_URL': '/username/reset/confirm/{uid}/{token}',
     'ACTIVATION_URL': '/activate/{uid}/{token}',
     'SEND_ACTIVATION_EMAIL': True,
-    'LOGIN_FIELD': 'email',
+    'TOKEN_MODEL':'rest_framework.authtoken.models.Token',
     'SERIALIZERS': {
         'user_create':'api.serializers.UserCreateSerializer',
         'user':'djoser.serializers.UserCreateSerializer',
@@ -157,16 +156,17 @@ DJOSER = {
         },
     'EMAIL':{
         'activation': 'api.email.ActivationEmail',
-        'confirmation': 'djoser.email.ConfirmationEmail',
-        'password_reset': 'djoser.email.PasswordResetEmail',
-        'password_changed_confirmation': 'djoser.email.PasswordChangedConfirmationEmail',
-        'username_changed_confirmation': 'djoser.email.UsernameChangedConfirmationEmail',
-        'username_reset': 'djoser.email.UsernameResetEmail',
+        'confirmation': 'api.email.ConfirmationEmail',
+        'password_reset': 'api.email.PasswordResetEmail',
+        'password_changed_confirmation': 'api.email.PasswordChangedConfirmationEmail'
     }
 }
 
 SIMPLE_JWT = {
-   'AUTH_HEADER_TYPES': ('JWT',),
+    "AUTH_HEADER_TYPES": ("JWT",),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    
 }
 
 
@@ -175,4 +175,5 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
+    "http://localhost:3000",
 ]
