@@ -1,11 +1,11 @@
 from datetime import datetime
-from api.models import candidatos, votaciones, votos_empleados
+from api.models import candidatos, votaciones, votos_empleados, votos
 from django.utils import timezone
 from api.serializers import ApiVotoSerializer, CandidatoSerializer, VotacionSerializer, VotoEmpleadoSerializer, puestoSerializer
-from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import authentication, permissions
 from rest_framework.permissions import IsAuthenticated
+from django.db.models import Count
+from api.permission import IsStaffPermission
 from rest_framework.decorators import api_view,permission_classes
 
 @api_view(['GET'])
@@ -16,39 +16,68 @@ def votacion_activa(request):
         return Response({"votacion":True})
     else:
         return Response({"votacion":False})
+
+@api_view(['GET'])
+def votacion_activa_reporte(request):
+    now = timezone.now()
+    votacion_cerrada = votaciones.objects.filter(cierre__lt=now).last()
+    votos_reporte = votos.objects.filter(id_votacion=votacion_activa.id)
+    votos_data    = ApiVotoSerializer(votos_reporte.data)
+    info= {}
+    for obj in votos_data:
+        if  info.get(obj.id_candidato)!= None:
+             info[obj.id_candidato].append(obj)
+        else:
+            info[obj.id_candidato] = [obj]
+    return Response({"candidatos":info})
+    
+    
+    
+    
+    if votacion_cerrada.id:
+        return Response({"votacion":True})
+    else:
+        return Response({"resultados":False})
+    
     
 @api_view(['GET','POST'])
 @permission_classes([IsAuthenticated])
 def voto(request):
     if request.method == 'GET':
-        votacion = votaciones.objects.last()
+        now = timezone.now()
+        votacion = votaciones.objects.filter(publicacion__lt=now,cierre__gt=now).last()
         mivoto = votos_empleados.objects.filter(id_votante=request.user.id,id_votacion=votacion.id).count()
         if mivoto > 0:
             return Response({"voto":True})
         else:
-            list_candidatos = candidatos.objects.filter(id_votaciones=votacion.id)
-            serializer = CandidatoSerializer(list_candidatos, many=True)
-            return Response({"candidatos":serializer.data})
+            l_can_grouped = {}
+            l_can= candidatos.objects.filter(id_votaciones=votacion.id)
+            for obj in l_can:
+                serializer = CandidatoSerializer(obj)
+                if  l_can_grouped.get(obj.id_puesto.id)!= None :
+                    l_can_grouped[obj.id_puesto.id].append(serializer.data)
+                else:
+                    l_can_grouped[obj.id_puesto.id] = [serializer.data]
+            return Response({"candidatos":l_can_grouped})
+        
     if request.method == 'POST':
-        votacion = votaciones.objects.last()
-        mivoto = votos_empleados.objects.filter(id_votante=request.user.id,id_votacion=votacion.id).count()
+        now = timezone.now()
+        votacion_activa = votaciones.objects.filter(publicacion__lt=now,cierre__gt=now).last()
+        voto_usuario = votos_empleados.objects.filter(id_votante=request.user.id,id_votacion=votacion_activa.id).count()
         #votos_num = candidatos.objects.filter(id_votacion=votacion.id)
-        if mivoto > 0:
-            return Response({"voto":True})
-        VotoEmpleadoData = VotoEmpleadoSerializer(data=request.data)
-        if VotoEmpleadoData.is_valid():
-            info = 0
-            api_empleado_voto_serializer = VotoEmpleadoSerializer(data={'id_votante':request.user.id,'id_votacion':votacion.id})
-            if api_empleado_voto_serializer.is_valid():
-                api_empleado_voto_serializer.save
-                
-            for x in VotoEmpleadoData.validated_data['voto']:
-                api_voto_serializer = ApiVotoSerializer(data={'id_candidato':x['id'],'id_votacion':votacion.id})
-                if api_voto_serializer.is_valid():
-                    api_voto_serializer.save()
-                    info =  info + 1
-            
-            return Response({"voto":info})
+        VotoEmpleadoData =  ApiVotoSerializer(data=request.data,many=True)
+        if votacion_activa.id and  voto_usuario > 0 and VotoEmpleadoData.is_valid():
+                VotoEmpleadoData.save()
+                return Response({"voto":True})
         return Response({"voto":False,"message":"Datos incorrectos"})
 
-    
+
+#panel de administracion
+@api_view(['GET'])
+@permission_classes([IsAuthenticated,IsStaffPermission])
+def votacion_general_info():
+    now = timezone.now()
+    votacion = votaciones.objects.filter(publicacion__lt=now,cierre__gt=now).last()
+    voto_emp = votos_empleados.objects.filter(id_votacion=votacion.id).count()
+    num_emp = votos_empleados.objects.all().count()
+    return Response({"votos":voto_emp,"numero_empleados":num_emp})

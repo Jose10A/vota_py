@@ -61,14 +61,15 @@ class puestos(models.Model):
     titulo = models.TextField()
     
 class candidatos(models.Model):
-    id_empleado = models.ForeignKey(empleados,on_delete=models.CASCADE)
+    id_empleado = models.ForeignKey(empleados,on_delete=CASCADE)
     id_puesto = models.ForeignKey(puestos,on_delete=CASCADE)
     id_votaciones = models.ForeignKey(votaciones, related_name='candidatura',default=1,on_delete=models.CASCADE)
     media = models.TextField()
     
 class votos(models.Model):
-    id_candidato = models.ForeignKey(candidatos,on_delete=models.CASCADE)
-    
+    id_candidato = models.ForeignKey(candidatos,on_delete=CASCADE)
+    id_votacion = models.ForeignKey(votaciones,on_delete=CASCADE,default=1)
+
 class votos_historicos(models.Model):
     id_candidato = models.ForeignKey(candidatos,on_delete=models.CASCADE)
     id_votacion = models.ForeignKey(votaciones,on_delete=CASCADE)
