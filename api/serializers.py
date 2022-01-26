@@ -51,14 +51,5 @@ class ApiVotoSerializer(serializers.ModelSerializer):
         model = votos
         fields = "__all__"
 
-class votoSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
-    id_puesto = serializers.IntegerField()
 
-class VotoEmpleadoSerializer(serializers.Serializer):
-    voto = votoSerializer(many=True)
-    id_votacion = serializers.IntegerField()
-    
-        
 
-    

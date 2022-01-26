@@ -64,12 +64,13 @@ def voto(request):
         now = timezone.now()
         votacion_activa = votaciones.objects.filter(publicacion__lt=now,cierre__gt=now).last()
         voto_usuario = votos_empleados.objects.filter(id_votante=request.user.id,id_votacion=votacion_activa.id).count()
-        #votos_num = candidatos.objects.filter(id_votacion=votacion.id)
-        VotoEmpleadoData =  ApiVotoSerializer(data=request.data,many=True)
-        if votacion_activa.id and  voto_usuario > 0 and VotoEmpleadoData.is_valid():
-                VotoEmpleadoData.save()
+        votosData =  ApiVotoSerializer(data=request.data,many=True)
+        votosInfo = VotoEmpleadoSerializer(data={"id_votante":request.user.id,"id_votacion":votacion_activa.id})
+        if votacion_activa.id and  voto_usuario == 0 and votosData.is_valid() and votosInfo.is_valid():
+                votosData.save()
+                votosInfo.save()
                 return Response({"voto":True})
-        return Response({"voto":False,"message":"Datos incorrectos"})
+        return Response({"voto":False,"message":"Datos incorrectos","valores":[]})
 
 
 #panel de administracion
