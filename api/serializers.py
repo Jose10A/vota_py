@@ -19,8 +19,7 @@ class VotoEmpleadoSerializer(serializers.ModelSerializer):
     class Meta:
         model = votos_empleados
         fields = "__all__"
-
-        
+    
 class puestoSerializer(serializers.ModelSerializer):
     class Meta:
         model = puestos

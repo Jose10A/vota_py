@@ -1,12 +1,15 @@
 from datetime import datetime
-from api.models import candidatos, votaciones, votos_empleados, votos
+from api.models import candidatos, puestos, votaciones, votos_empleados, votos
+from rest_framework import status, viewsets
 from django.utils import timezone
-from api.serializers import ApiVotoSerializer, CandidatoSerializer, VotacionSerializer, VotoEmpleadoSerializer, puestoSerializer
+from api.serializers import ApiVotoSerializer, CandidatoSerializer, VotacionSerializer, VotoEmpleadoSerializer, puestoSerializer, UserCreateSerializer
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from django.db.models import Count
 from api.permission import IsStaffPermission
+from django.contrib.auth import get_user_model
 from rest_framework.decorators import api_view,permission_classes
+
+
 
 @api_view(['GET'])
 def votacion_activa(request):
@@ -82,3 +85,36 @@ def votacion_general_info():
     voto_emp = votos_empleados.objects.filter(id_votacion=votacion.id).count()
     num_emp = votos_empleados.objects.all().count()
     return Response({"votos":voto_emp,"numero_empleados":num_emp})
+
+class PuestosViewSet(viewsets.ModelViewSet):
+    """
+    A simple ViewSet for viewing and editing Puestos.
+    """
+    queryset = puestos.objects.all()
+    serializer_class = puestoSerializer
+    permission_classes = [IsAuthenticated,IsStaffPermission]
+
+class VotacionesViewSet(viewsets.ModelViewSet):
+    """
+    A simple ViewSet for viewing and editing votaciones.
+    """
+    queryset = votaciones.objects.all()
+    serializer_class = VotacionSerializer
+    permission_classes = [IsAuthenticated,IsStaffPermission]
+    
+class CandidatosViewSet(viewsets.ModelViewSet):
+    """
+    A simple ViewSet for viewing and editing Candidaturas.
+    """
+    queryset = candidatos.objects.all()
+    serializer_class = CandidatoSerializer
+    permission_classes = [IsAuthenticated,IsStaffPermission]
+    
+User = get_user_model()
+class UserViewSet(viewsets.ModelViewSet):
+    """
+    A simple ViewSet for viewing and editing Usuarios.
+    """
+    queryset = User.objects.all()
+    serializer_class = UserCreateSerializer
+    permission_classes = [IsAuthenticated,IsStaffPermission]
