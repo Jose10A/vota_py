@@ -51,4 +51,7 @@ class ApiVotoSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-
+class CandidatoPanelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = candidatos
+        fields = "__all__"
