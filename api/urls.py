@@ -46,8 +46,8 @@ urlpatterns = [
 
     #--endpoints del panel
     path("admin/dashboard/",views.votacion_general_info,name="dashboard"),
-    path("admin/votacion/",votacion_panel_list,name="votacion_list"),
     path("admin/votacion/<int:pk>",votacion_panel_pk_list,name="votacion_pk"),
+    path("admin/votacion/",votacion_panel_list,name="votacion_list"),
     path("admin/user/",user_panel_list,name="usuario_list"),
     path("admin/candidato/<int:pk>",candidato_panel_pk_list,name="candidato_pk"),
     path("admin/candidato/",candidato_panel_list,name="candidato_"),
