@@ -2,6 +2,7 @@ from django.db import models
 from django.db.models.deletion import CASCADE
 from django.db.models.expressions import Case
 from datetime import datetime
+from rest_framework.response import Response
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 
 # Create your models here.
@@ -12,7 +13,6 @@ class votaciones(models.Model):
     titulo = models.TextField()
     cierre = models.DateTimeField()
     inicio = models.DateTimeField()
-    publicacion = models.DateTimeField()
     
 class configuracion(models.Model):
     convocatoria = models.TextField()
@@ -21,7 +21,11 @@ class UserAccountManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
             raise ValueError('Users must have an email address')
-
+        
+        check = datos_empleados.objects.filter(no_expediente=extra_fields['no_expediente']).count()
+        if check == 0:
+            raise ValueError('El numero de expediente no es valido')
+            
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
 
@@ -63,7 +67,7 @@ class puestos(models.Model):
 class candidatos(models.Model):
     id_empleado = models.ForeignKey(empleados,on_delete=CASCADE)
     id_puesto = models.ForeignKey(puestos,on_delete=CASCADE)
-    id_votaciones = models.ForeignKey(votaciones, related_name='candidatura',default=1,on_delete=models.CASCADE)
+    id_votaciones = models.ForeignKey(votaciones,on_delete=models.CASCADE)
     media = models.TextField()
     
 class votos(models.Model):
@@ -74,3 +78,8 @@ class votos_historicos(models.Model):
     id_candidato = models.ForeignKey(candidatos,on_delete=models.CASCADE)
     id_votacion = models.ForeignKey(votaciones,on_delete=CASCADE)
     monto = models.IntegerField()
+
+class datos_empleados(models.Model):
+    nombres = models.TextField()
+    apellidos = models.TextField()
+    no_expediente = models.TextField()

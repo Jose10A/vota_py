@@ -50,9 +50,10 @@ urlpatterns = [
     path("admin/votacion/",votacion_panel_list,name="votacion_list"),
     path("admin/user/",user_panel_list,name="usuario_list"),
     path("admin/candidato/<int:pk>",candidato_panel_pk_list,name="candidato_pk"),
-    path("admin/candidato/",candidato_panel_list,name="candidato_"),
+    path("admin/candidato/  ",views.admin_candidatura,name="candidato_"),
     path("admin/puesto/<int:pk>",puesto_panel_pk_list,name="puesto_pk"),
-    path("admin/puesto/",puesto_panel_list,name="puesto_")
+    path("admin/puesto/",puesto_panel_list,name="puesto_"),
+    path("admin/votacion/empleados/faltante",views.relacion_faltante,name="faltante_")
     
     
     ]

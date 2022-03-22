@@ -1,4 +1,3 @@
-from datetime import datetime
 from api import serializers
 from api.models import candidatos, empleados, puestos, votaciones, votos_empleados, votos
 from rest_framework import status, viewsets
@@ -9,13 +8,13 @@ from rest_framework.permissions import IsAuthenticated
 from api.permission import IsStaffPermission
 from django.contrib.auth import get_user_model
 from rest_framework.decorators import api_view,permission_classes
-
+from excel_response import ExcelResponse
 
 
 @api_view(['GET'])
 def votacion_activa(request):
     now = timezone.now()
-    votacion = votaciones.objects.filter(publicacion__lt=now,cierre__gt=now).count()
+    votacion = votaciones.objects.filter(inicio__lt=now,cierre__gt=now).count()
     if votacion > 0:
         return Response({"votacion":True})
     else:
@@ -37,21 +36,16 @@ def votacion_activa_reporte(request):
     
     
     
-    
-    if votacion_cerrada.id:
-        return Response({"votacion":True})
-    else:
-        return Response({"resultados":False})
-    
+ 
     
 @api_view(['GET','POST'])
 @permission_classes([IsAuthenticated])
 def voto(request):
     if request.method == 'GET':
         now = timezone.now()
-        votacion_activa = votaciones.objects.filter(publicacion__lt=now,cierre__gt=now).count()
+        votacion_activa = votaciones.objects.filter(inicio__lt=now,cierre__gt=now).count()
         if votacion_activa:
-            votacion = votaciones.objects.filter(publicacion__lt=now,cierre__gt=now).last()
+            votacion = votaciones.objects.filter(inicio__lt=now,cierre__gt=now).last()
             mivoto = votos_empleados.objects.filter(id_votante=request.user.id,id_votacion=votacion.id).count()
             if mivoto > 0:
                 return Response({"voto":True})
@@ -69,11 +63,11 @@ def voto(request):
         
     if request.method == 'POST':
         now = timezone.now()
-        votacion_activa = votaciones.objects.filter(publicacion__lt=now,cierre__gt=now).last()
+        votacion_activa = votaciones.objects.filter(inicio__lt=now,cierre__gt=now).last()
         voto_usuario = votos_empleados.objects.filter(id_votante=request.user.id,id_votacion=votacion_activa.id).count()
         votosData =  ApiVotoSerializer(data=request.data,many=True)
-        
         votosInfo = VotoEmpleadoSerializer(data={"id_votante":request.user.id,"id_votacion":votacion_activa.id})
+        
         if votacion_activa.id and  voto_usuario == 0 and votosData.is_valid() and votosInfo.is_valid():
                 votosData.save()
                 votosInfo.save()
@@ -82,14 +76,7 @@ def voto(request):
 
 
 #panel de administracion
-@api_view(['GET'])
-@permission_classes([IsAuthenticated,IsStaffPermission])
-def votacion_general_info(request):
-    now = timezone.now()
-    votacion = votaciones.objects.filter(publicacion__lt=now,cierre__gt=now).last()
-    voto_emp = votos_empleados.objects.filter(id_votacion=votacion.id).count()
-    num_emp = votos_empleados.objects.all().count()
-    return Response({"votos":voto_emp,"numero_empleados":num_emp})
+
 
 class PuestosViewSet(viewsets.ModelViewSet):
     """
@@ -107,7 +94,6 @@ class VotacionesViewSet(viewsets.ModelViewSet):
     serializer_class = VotacionSerializer
     permission_classes = [IsAuthenticated,IsStaffPermission]
     
-
 class CandidatosViewSet(viewsets.ModelViewSet):
     """
     A simple ViewSet for viewing and editing Candidaturas.
@@ -126,8 +112,6 @@ class CandidatosViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         return self.serializer_classes.get(self.action, self.default_serializer_class)
 
-    
-    
 User = get_user_model()
 class UserViewSet(viewsets.ModelViewSet):
     """
@@ -136,3 +120,48 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserCreateSerializer
     permission_classes = [IsAuthenticated,IsStaffPermission]
+    
+    
+    
+    
+@api_view(['GET','POST'])
+def admin_candidatura(request):
+    if request.method == 'GET':
+        info=[]
+        data = candidatos.objects.all()
+        for row in data:
+            info.append({"id":row.id,"empleado":row.id_empleado.nombres,"puesto":row.id_puesto.titulo,"votacion":row.id_votaciones.titulo})
+        return Response({"res":info})
+    if request.method == 'POST':
+        votosInfo = CandidatoSerializer(data={"id_empleado":request.id_empleado,"id_puesto":request.id_puesto})
+        return Response({"votacion":True})
+        
+@api_view(['GET'])
+def votacion_general_info(request):
+    if request.method == 'GET':
+        votacion_activa = votaciones.objects.last()
+        votos_emitidos = votos_empleados.objects.filter(id_votacion=votacion_activa.id).count()
+        votos_totales = empleados.objects.count()
+        return Response({"votacion":votacion_activa.titulo,"votos_realizados":votos_emitidos,"votos_totales":votos_totales})
+
+       
+@api_view(['GET'])
+def relacion_faltante(request):
+    if request.method == 'GET':
+        info=[]
+        votacion_activa = votaciones.objects.last()
+        votos_emitidos = votos_empleados.objects.filter(id_votacion=votacion_activa.id).values('id_votante')
+        for row in votos_emitidos:
+            info.append(row['id_votante'])
+        votos_faltantes = empleados.objects.exclude(id__in=info).values("nombres","apellidos","no_expediente")
+
+        return ExcelResponse(votos_faltantes,"votos faltantes")
+
+        
+        
+        
+        
+  
+
+
+       

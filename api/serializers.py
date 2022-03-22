@@ -13,7 +13,7 @@ class EmpleadoSerializer(serializers.ModelSerializer):
 class VotacionSerializer(serializers.ModelSerializer):
     class Meta:
         model = votaciones
-        fields = [ 'id','titulo', 'inicio','cierre', 'publicacion']
+        fields = [ 'id','titulo', 'inicio','cierre']
 
 class VotoEmpleadoSerializer(serializers.ModelSerializer):
     class Meta:
